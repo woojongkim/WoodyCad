@@ -86,8 +86,16 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ByteBuider.cs" />
     <Compile Include="Commands.cs" />
     <Compile Include="ApiService.cs" />
+    <Compile Include="DialogUtils.cs" />
+    <Compile Include="form\DrawingCheckInForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="form\DrawingCheckInForm.Designer.cs">
+      <DependentUpon>DrawingCheckInForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="form\DrawingSearchForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -96,7 +104,6 @@
     </Compile>
     <Compile Include="ImageUtils.cs" />
     <Compile Include="Drawing.cs" />
-    <Compile Include="DrawingBase.cs" />
     <Compile Include="EKIApiService.cs" />
     <Compile Include="EKIWindowService.cs" />
     <Compile Include="LoggerUtils.cs" />
@@ -115,6 +122,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="form\DrawingCheckInForm.resx">
+      <DependentUpon>DrawingCheckInForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="form\DrawingSearchForm.resx">
       <DependentUpon>DrawingSearchForm.cs</DependentUpon>
     </EmbeddedResource>

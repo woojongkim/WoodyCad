@@ -3,6 +3,8 @@ using System;
 using Autodesk.AutoCAD.ApplicationServices;
 using MaterialSkin;
 using Autodesk.AutoCAD.DatabaseServices;
+using acadApplication = Autodesk.AutoCAD.ApplicationServices.Application;
+using System.Windows;
 
 namespace WoodyCad
 {
@@ -166,14 +168,46 @@ namespace WoodyCad
                 switch (button.Id)
                 {
                     case "ID_DRAWING_SEARCH":
-                        form.DrawingSearchForm drawingSearchForm = new form.DrawingSearchForm();
-                        
-                        var skinManager = MaterialSkinManager.Instance;
-                        skinManager.AddFormToManage(drawingSearchForm);
-                        skinManager.Theme = MaterialSkinManager.Themes.DARK;
-                        skinManager.ColorScheme = new ColorScheme(Primary.BlueGrey800, Primary.BlueGrey900, Primary.BlueGrey500, Accent.LightBlue700, TextShade.WHITE);
+                        {
+                            form.DrawingSearchForm form = new form.DrawingSearchForm();
 
-                        drawingSearchForm.Show();
+                            var skinManager = MaterialSkinManager.Instance;
+                            skinManager.AddFormToManage(form);
+                            skinManager.Theme = MaterialSkinManager.Themes.DARK;
+                            skinManager.ColorScheme = new ColorScheme(Primary.LightBlue700, Primary.LightBlue900, Primary.LightBlue400, Accent.LightBlue700, TextShade.BLACK);
+
+                            form.Show();
+                        }
+                        break;
+                    case "ID_CHECK_IN":
+                        {
+                            object obj = acadApplication.GetSystemVariable("DBMOD");
+
+                            if (System.Convert.ToInt16(obj) != 0)
+                            {
+                                if (System.Windows.Forms.MessageBox.Show("Do you wish to save this drawing?",
+                                                          "Save Drawing",
+                                                          System.Windows.Forms.MessageBoxButtons.YesNo,
+                                                          System.Windows.Forms.MessageBoxIcon.Question)
+                                                          == System.Windows.Forms.DialogResult.Yes)
+                                {
+                                    Document acDoc = acadApplication.DocumentManager.MdiActiveDocument;
+                                    acDoc.Database.SaveAs(acDoc.Name, true, DwgVersion.Current, acDoc.Database.SecurityParameters);
+                                }
+                            }
+
+                            var form = new form.DrawingCheckInForm();
+
+                            var skinManager = MaterialSkinManager.Instance;
+                            skinManager.AddFormToManage(form);
+                            skinManager.Theme = MaterialSkinManager.Themes.DARK;
+                            skinManager.ColorScheme = new ColorScheme(Primary.BlueGrey800, Primary.BlueGrey900, Primary.BlueGrey500, Accent.LightBlue700, TextShade.BLACK);
+
+                            //form.Show();
+
+                            acadApplication.ShowModalDialog(form);
+                        }
+
                         break;
                 }
             }

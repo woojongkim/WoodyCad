@@ -1,4 +1,5 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,24 +8,79 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
+using acadApplication = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 
 namespace WoodyCad
 {
-    public class ValutService
+    public class VaultService
     {
+        private static VaultService Instance;
+
         private ApiService ApiService;
 
-        public ValutService()
+        public static VaultService GetInstance()
+        {
+            if(Instance == null)
+                Instance = new VaultService();
+
+            return Instance;
+        }
+
+
+        private VaultService()
         {
             ApiService = new EKIApiService();
         }
 
-        public void CheckIn(Drawing UploadDrawing)
+        public void CheckIn(string filePath, DrawingUploadDto uploadDrawing)
+        {
+            object obj = Application.GetSystemVariable("DBMOD");
+
+            LoggerUtils.Info("Upload drwing : " + uploadDrawing.ToString());
+            LoggerUtils.Debug(filePath);
+            LoggerUtils.Debug(System.Convert.ToInt16(obj).ToString());
+            
+            Document acDoc = Application.DocumentManager.MdiActiveDocument;
+
+            string tempFilePath = ApiService.TargetPath + "\\temp.dwg";
+
+            using (DocumentLock documentLock = acDoc.LockDocument())
+            {
+
+                //acDoc.Database.SaveAs(acDoc.Name, true, DwgVersion.Current, acDoc.Database.SecurityParameters);
+                File.Copy(acDoc.Name, tempFilePath, true);
+                
+                FileStream fileStream = new FileStream(tempFilePath, FileMode.Open, FileAccess.Read);
+                byte[] fileBytes = new byte[fileStream.Length];
+                fileStream.Read(fileBytes, 0, fileBytes.Length);
+                fileStream.Close();
+
+                //acadApplication.DocumentManager.Open(filePath, false);
+
+
+                ApiService.CheckIn(fileBytes, uploadDrawing);
+            }
+        }
+
+        public List<Drawing> FindDrawing(DrawingSearchDto query)
+        {
+            List<Drawing> drawingList = ApiService.FindDrawing(query);
+
+
+            return drawingList;
+        }
+
+        public Drawing GetDrawing(long DrawingId)
         {
             throw new NotImplementedException();
         }
 
-        public Drawing CheckOut(Drawing drawing)
+        public List<Drawing> ListDrawing(Drawing searchDrawing)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Drawing OpenDrawing(Drawing drawing, Boolean checkout)
         {
             // 문자열의 경로로 디렉토리가 존재하는지 확인
             if (!Directory.Exists(ApiService.TargetPath))
@@ -33,9 +89,17 @@ namespace WoodyCad
                 Directory.CreateDirectory(ApiService.TargetPath);
             }
 
-            string localFilePath = ApiService.TargetPath + "co_"+drawing.DrawingNo+"_"+drawing.DrawingName + ".dwg";
+            string localFilePath = ApiService.TargetPath + drawing.DrawingNo + "_" + drawing.DrawingName + ".dwg";
 
             // TO-DO: 이미 파일이 존재하고, Open한 상태이면 alert 발생
+            foreach(Document doc in acadApplication.DocumentManager)
+            {
+                if(doc.Name.Equals(localFilePath))
+                {
+                    LoggerUtils.Alert("File is already opened.");
+                    return null;
+                }
+            }
 
             // 파일이 존재하는지 확인하여 존재하면 삭제
             if (File.Exists(localFilePath))
@@ -43,7 +107,7 @@ namespace WoodyCad
                 File.Delete(localFilePath);
             }
 
-            HttpWebResponse response = ApiService.CheckOut(drawing.DrawingId);
+            HttpWebResponse response = ApiService.DownloadDrawing(drawing.DrawingId, checkout);
 
             Stream resStream = response.GetResponseStream();
             int bytesProcessed = 0;
@@ -75,28 +139,9 @@ namespace WoodyCad
             return drawing;
         }
 
-        public Drawing CheckOut(string DrawingId)
+        internal List<Drawing> FindRevisions(string drawingId)
         {
-            Drawing drawing = ApiService.GetDrawing(DrawingId);
-            return CheckOut(drawing);
-        }
-
-        public List<Drawing> FindDrawing(DrawingSearchDto query)
-        {
-            List<Drawing> drawingList = ApiService.FindDrawing(query);
-
-
-            return drawingList;
-        }
-
-        public Drawing GetDrawing(long DrawingId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public List<Drawing> ListDrawing(Drawing searchDrawing)
-        {
-            throw new NotImplementedException();
+            return ApiService.FindRevisons(drawingId);
         }
     }
 }

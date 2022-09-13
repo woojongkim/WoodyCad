@@ -1,6 +1,8 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.EditorInput;
 using MaterialSkin.Controls;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -9,19 +11,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Media;
 using acadApplication = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace WoodyCad.form
 {
     public partial class DrawingSearchForm : MaterialForm
     {
-        ValutService ValutService;
+        VaultService ValutService;
 
         Document Doc;
 
         public DrawingSearchForm()
         {
-            ValutService = new ValutService();
+            ValutService = VaultService.GetInstance();
 
             Doc = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument;
 
@@ -53,11 +56,8 @@ namespace WoodyCad.form
             List<Drawing> drawings = ValutService.FindDrawing(query);
 
             searchView.BeginUpdate();
-
             searchView.Clear();
-
             searchView.View = View.Details;
-
             searchView.HeaderStyle = ColumnHeaderStyle.Clickable;
 
 
@@ -65,10 +65,10 @@ namespace WoodyCad.form
 
             searchView.Columns.Add("No", 100, HorizontalAlignment.Left);
             searchView.Columns.Add("Id", 50, HorizontalAlignment.Left);
-            searchView.Columns.Add("Name", 150, HorizontalAlignment.Left);
+            searchView.Columns.Add("Name", 300, HorizontalAlignment.Left);
             searchView.Columns.Add("Rev", 50, HorizontalAlignment.Left);
-            searchView.Columns.Add("Drafter", 100, HorizontalAlignment.Left);
-            searchView.Columns.Add("Created", 150, HorizontalAlignment.Left);
+            searchView.Columns.Add("Drafter", 80, HorizontalAlignment.Left);
+            searchView.Columns.Add("Modified", 160, HorizontalAlignment.Left);
 
 
             if (drawings != null)
@@ -78,9 +78,9 @@ namespace WoodyCad.form
                      ListViewItem item = new ListViewItem(row.DrawingNo);
                      item.SubItems.Add(row.DrawingId);
                      item.SubItems.Add(row.DrawingName);
-                     item.SubItems.Add(row.Revision);
+                     item.SubItems.Add(row.Version);
                      item.SubItems.Add(row.Drafter);
-                     item.SubItems.Add(row.CreatedDate);
+                     item.SubItems.Add(row.ModifiedDate);
                      searchView.Items.Add(item);
                  }
             }
@@ -88,11 +88,16 @@ namespace WoodyCad.form
 
 
 
+            //{ // fit column
+            //    searchView.AutoResizeColumn(0, ColumnHeaderAutoResizeStyle.ColumnContent);
+            //    searchView.AutoResizeColumn(2, ColumnHeaderAutoResizeStyle.ColumnContent);
 
-            searchView.AutoResizeColumn(0, ColumnHeaderAutoResizeStyle.ColumnContent);
-            //searchView.AutoResizeColumn(1, ColumnHeaderAutoResizeStyle.ColumnContent);
-            searchView.AutoResizeColumn(2, ColumnHeaderAutoResizeStyle.ColumnContent);
-
+            //    foreach (ColumnHeader col in searchView.Columns)
+            //    {
+            //        col.Width += 20;
+            //    }
+            //}
+           
 
             searchView.Columns[1].Width = 0;
 
@@ -108,7 +113,7 @@ namespace WoodyCad.form
             drawing.DrawingId = searchView.SelectedItems[0].SubItems[1].Text;
             drawing.DrawingName = searchView.SelectedItems[0].SubItems[2].Text;
 
-            ValutService.CheckOut(drawing);
+            ValutService.OpenDrawing(drawing, true);
         }
 
         private void CheckEnterKeyPress(object sender, System.Windows.Forms.KeyPressEventArgs e)
@@ -125,7 +130,67 @@ namespace WoodyCad.form
             {
                 this.Width = 1500;
             }
+            SidePanel.Width = 500;
             SidePanel.Visible = true;
+
+            lbRevisionDrawing.Text = searchView.SelectedItems[0].SubItems[0].Text;
+            string drawingId = searchView.SelectedItems[0].SubItems[1].Text;
+
+            List<Drawing> drawings = ValutService.FindRevisions(drawingId);
+
+            reivisionView.BeginUpdate();
+            reivisionView.Clear();
+            reivisionView.View = View.Details;
+            reivisionView.HeaderStyle = ColumnHeaderStyle.Clickable;
+
+
+            reivisionView.Columns.Add("Rev", 50, HorizontalAlignment.Left);
+            reivisionView.Columns.Add("Id", 0, HorizontalAlignment.Left);
+            reivisionView.Columns.Add("Name", 150, HorizontalAlignment.Left);
+            reivisionView.Columns.Add("Drafter", 100, HorizontalAlignment.Left);
+            reivisionView.Columns.Add("Comment", 150, HorizontalAlignment.Left);
+            reivisionView.Columns.Add("Modified", 150, HorizontalAlignment.Left);
+
+            if (drawings != null)
+            {
+                foreach (var row in drawings)
+                {
+                    ListViewItem item = new ListViewItem(row.Version);
+                    item.SubItems.Add(row.DrawingId);
+                    item.SubItems.Add(row.DrawingName);
+                    item.SubItems.Add(row.Drafter);
+                    item.SubItems.Add(row.Comment);
+                    item.SubItems.Add(row.ModifiedDate);
+                    reivisionView.Items.Add(item);
+                }
+            }
+
+            //{ // fit column
+            //    reivisionView.AutoResizeColumn(0, ColumnHeaderAutoResizeStyle.ColumnContent);
+            //    reivisionView.AutoResizeColumn(2, ColumnHeaderAutoResizeStyle.ColumnContent);
+
+            //    foreach (ColumnHeader col in reivisionView.Columns)
+            //    {
+            //        col.Width += 20;
+            //    }
+            //}
+
+            reivisionView.Columns[1].Width = 0;
+
+            reivisionView.EndUpdate();
+        }
+
+        private void btnOpenDrawing_Click(object sender, EventArgs e)
+        {
+            if(reivisionView.SelectedItems.Count > 0)
+            {
+                Drawing drawing = new Drawing();
+                drawing.DrawingNo = lbRevisionDrawing.Text;
+                drawing.DrawingId = reivisionView.SelectedItems[0].SubItems[1].Text;
+                drawing.DrawingName = reivisionView.SelectedItems[0].SubItems[2].Text;
+
+                ValutService.OpenDrawing(drawing, false);
+            }
         }
     }
 }

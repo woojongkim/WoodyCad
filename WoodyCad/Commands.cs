@@ -42,22 +42,6 @@ namespace WoodyCad
             }
         }
 
-
-        [CommandMethod("PS_CHECKOUT", CommandFlags.Transparent)]
-        public void Checkout()
-        {
-            Editor ed = Application.DocumentManager.MdiActiveDocument.Editor;
-
-            PromptStringOptions prompt = new PromptStringOptions("Input drawing id : ");
-
-            PromptResult drawingPromptResult = ed.GetString(prompt);
-            if (drawingPromptResult.Status == PromptStatus.OK)
-            {
-                ValutService valutService = new ValutService();
-                valutService.CheckOut(drawingPromptResult.StringResult);
-            }
-        }
-
         [CommandMethod("PS_REINIT", CommandFlags.Transparent)]
         public void Reinit()
         {

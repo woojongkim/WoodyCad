@@ -18,8 +18,8 @@ namespace WoodyCad
         [JsonProperty("drawingName")]
         public string DrawingName { get; set; }
         
-        [JsonProperty("revision")]
-        public string Revision { get; set; }
+        [JsonProperty("version")]
+        public string Version { get; set; }
         
         [JsonProperty("comment")]
         public string Comment { get; set; }
@@ -27,18 +27,18 @@ namespace WoodyCad
         [JsonProperty("drafter")]
         public string Drafter { get; set; }
 
-        [JsonProperty("createdDate")]
-        public string CreatedDate { get; set; }
+        [JsonProperty("modifiedDate")]
+        public string ModifiedDate { get; set; }
 
-        public Drawing(string drawingId, string drawingNo, string drawingName, string revision, string comment, string drafter, string createdDate)
+        public Drawing(string drawingId, string drawingNo, string drawingName, string version, string comment, string drafter, string modifiedDate)
         {
             DrawingId = drawingId;
             DrawingNo = drawingNo;
             DrawingName = drawingName;
-            Revision = revision;
+            Version = version;
             Comment = comment;
             Drafter = drafter;
-            CreatedDate = createdDate;
+            ModifiedDate = modifiedDate;
         }
 
         public Drawing()
@@ -74,6 +74,33 @@ namespace WoodyCad
 
         public DrawingSearchDto()
         {
+        }
+    }
+
+    public class DrawingUploadDto
+    {
+        [JsonProperty("drawingNo")]
+        public string DrawingNo { get; set; }
+
+        [JsonProperty("drawingName")]
+        public string DrawingName { get; set; }
+
+        [JsonProperty("drafter")]
+        public string Drafter { get; set; }
+
+        [JsonProperty("comment")]
+        public string Comment { get; set; }
+
+        [JsonProperty("fileName")]
+        public string FileName { get; set; }
+
+        public DrawingUploadDto(string drawingNo, string drawingName, string drafter, string comment, string fileName)
+        {
+            DrawingNo = drawingNo;
+            DrawingName = drawingName;
+            Drafter = drafter;
+            Comment = comment;
+            FileName = fileName;
         }
     }
 }
